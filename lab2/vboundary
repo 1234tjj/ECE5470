@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+""" vboundary a python version of vboundary
+
+Program of Q4: detect segment boundary of an image
+"""
+
+import numpy as np
+from v4 import vx
+
+of=' '
+vxif=' '
+vargs = vx.vaparse( "if= of= -v  - ")
+if '-' in vargs:
+   print ("vboundary V4 python local max test program")
+   print ("if= input file")
+   print ("of= output file")
+   print ("[-v] verbose mode")
+   exit(0)
+
+# check arguments 
+optv = '-v' in vargs
+if 'if' in vargs:
+   inimage = vx.Vx(vargs['if'])
+else:
+   print ( 'vboundary  error: if= must be specified')
+   exit()
+im = inimage.i
+if im.dtype != 'uint8' :
+    print ('vboundary error: image not byte type', file=sys.stderr)
+    exit(1)
+# check for output file name
+if 'of' not in vargs:
+   print ( 'vboundary error: of= must be specified')
+   exit()
+
+# write a helper function to find neighbors
+def find_neighbor(y, x, num_col, num_row):
+    neighbor = []
+    check_list = {(y-1, x), (y+1, x), (y, x-1), (y, x+1)}
+    for element in check_list:
+        if element[0] >= 0 and element[0] < num_col and element[1] >=0 and element[1] < num_row:
+            neighbor.append(element)
+    return neighbor
+
+# copy the original image
+tmimage = vx.Vx( inimage ) 
+tm = tmimage.i
+
+# record all background pixels
+back_loc = []
+num_col = im.shape[0]
+num_row = im.shape[1]
+
+for y in range(num_col):
+    for x in range(num_row):
+        if tm[y,x] == 0:
+            back_loc.append((y,x))
+
+# record all boundary pixels
+neighbor_loc = []
+for y in range(num_col):
+    for x in range(num_row):
+        if tm[y,x] != 0:
+            all_neighbor = find_neighbor(y, x, num_col, num_row)
+            for loc in all_neighbor:
+                if tm[loc[0], loc[1]] == 0:
+                    neighbor_loc.append((y,x))
+                    break
+
+# record all interior region pixels
+interior_loc = []
+for y in range(num_col):
+    for x in range(num_row):
+        if (y,x) not in back_loc and (y,x) not in neighbor_loc:
+            interior_loc.append((y,x))
+
+# assign 0, 128, 255 to corresponding indices
+for element in back_loc:
+    im[element[0], element[1]] = 0
+for element in neighbor_loc:
+    im[element[0], element[1]] = 255
+for element in interior_loc:
+    im[element[0], element[1]] = 128
+
+inimage.write(vargs['of'])

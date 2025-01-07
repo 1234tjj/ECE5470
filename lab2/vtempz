@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+""" vtempz a python fucntion version of vtemp
+
+This simple demonstration program computes a local max filter
+using a function pixmax
+"""
+
+import numpy as np
+from v4 import vx
+
+of=' '
+vxif=' '
+vargs = vx.vaparse( "if= of= -v  - ")
+if '-' in vargs:
+   print ("vtempy V4 python local max test program")
+   print ("if= input file")
+   print ("of= output file")
+   print ("[-v] verbose mode")
+   exit(0)
+
+def pixmax (x, y):
+    global im, tm
+    im[y,x] = max(tm[y+1,x+1],tm[y+1,x+2],
+                  tm[y+1,x],tm[y,x+1],tm[y+2,x+1])
+
+# check arguments 
+optv = '-v' in vargs
+if 'if' in vargs:
+   inimage = vx.Vx(vargs['if'])
+else:
+   print ( 'vtempy  error: if= must be specified')
+   exit()
+im = inimage.i
+if im.dtype != 'uint8' :
+    print ('vtempy error: image not byte type', file=sys.stderr)
+    exit(1)
+# check for output file name
+if 'of' not in vargs:
+   print ( 'vtempy error: of= must be specified')
+   exit()
+
+# Compute max filter
+tmimage = vx.Vx( inimage ) 
+tmimage.embedim((1,1,1,1))
+tm = tmimage.i
+
+for y in range(im.shape[0] ):
+    for x in range(im.shape[1]  ):
+        pixmax(x,y)
+if optv:
+   print (im)
+
+inimage.write(vargs['of'])

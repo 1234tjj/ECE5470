@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+""" vcclabel a python version of vcclabel
+
+Program of Q5: Label different components in an image
+"""
+
+import numpy as np
+from v4 import vx
+
+of=' '
+vxif=' '
+vargs = vx.vaparse( "if= of= -v  - ")
+if '-' in vargs:
+   print ("vcclabel V4 Label different components in an image")
+   print ("if= input file")
+   print ("of= output file")
+   print ("[-v] verbose mode")
+   exit(0)
+
+# check arguments 
+optv = '-v' in vargs
+if 'if' in vargs:
+   inimage = vx.Vx(vargs['if'])
+else:
+   print ( 'vcclabel  error: if= must be specified')
+   exit()
+im = inimage.i
+if im.dtype != 'uint8' :
+    print ('vcclabel error: image not byte type', file=sys.stderr)
+    exit(1)
+# check for output file name
+if 'of' not in vargs:
+   print ( 'vcclabel error: of= must be specified')
+   exit()
+
+# write a helper function to find neighbors
+def find_neighbor(y, x, num_col, num_row):
+    neighbor = []
+    check_list = {(y-1, x), (y+1, x), (y, x-1), (y, x+1)}
+    for element in check_list:
+        if element[0] >= 0 and element[0] < num_col and element[1] >=0 and element[1] < num_row:
+            neighbor.append(element)
+    return neighbor
+
+def setlabel (y, x, num_col, num_row, current_num):
+    global im, tm
+    if (y,x) not in labelled and tm[y,x] != 0:
+        im[y,x] = current_num
+        labelled.append((y,x))
+        next_set = find_neighbor(y, x, num_col, num_row)
+        for element in next_set:
+            setlabel(element[0], element[1], num_col, num_row, current_num)
+
+# copy the original image
+tmimage = vx.Vx( inimage ) 
+tm = tmimage.i
+
+
+labelled = []
+num_col = im.shape[0]
+num_row = im.shape[1]
+current_num = 1
+
+for y in range(num_col):
+    for x in range(num_row):
+        if (y,x) not in labelled:
+            setlabel(y, x, num_col, num_row, current_num)
+            if tm[y,x] != 0:
+                current_num += 1
+
+inimage.write(vargs['of'])
