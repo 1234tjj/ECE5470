@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+
+"""
+vits: Iterative Threshold Selection
+"""
+
+import numpy as np
+from v4 import vx
+
+vargs = vx.vaparse("if= of=")
+
+if 'OPT' in locals():
+   print ("vits: iterative threshold selection")
+   print ("if= input file")
+   print ("of= output file")
+   exit(0)
+
+optv = '-v' in vargs
+for arg in ('if', 'of'):
+     if arg not in vargs:
+       print ( 'vits error: missing required parameter %s' % arg)
+       exit(1)
+inimage = vx.Vx(vargs['if'])
+im = inimage.i
+if im.dtype != 'uint8' :
+    print ("error: image not byte type" )
+    exit(1)
+
+epsilon = 1e-5
+
+# Compute the initial_threshold
+num_col = im.shape[0]
+num_row = im.shape[1]
+
+initial_sum = 0
+for y in range(num_col):
+    for x in range(num_row):
+        initial_sum += im[y,x]
+initial_threshold = initial_sum / (num_row * num_col)
+
+# Classify and calculate average functions
+def classify(num_col, num_row, threshold):
+    below_t = []
+    above_t = []
+    for y in range(num_col):
+        for x in range(num_row):
+            if im[y,x] <= threshold:
+                below_t.append((y,x))
+            else:
+                above_t.append((y,x))
+    return below_t, above_t
+
+def calculate_average(dict_coordinate):
+    if len(dict_coordinate) == 0:
+        return 255
+    dict_sum = 0
+    for i in dict_coordinate:
+        dict_sum += im[i[0],i[1]]
+    return dict_sum / len(dict_coordinate)
+
+# Record avg1 and avg2
+avg1_list = []
+avg2_list = []
+
+# Iterate
+below_t,above_t = classify(num_col, num_row, initial_threshold)
+avg1_list.append(calculate_average(below_t))
+avg2_list.append(calculate_average(above_t))
+new_threshold = (avg1_list[-1] + avg2_list[-1]) / 2
+
+while(len(avg1_list) <= 100):
+    below_t,above_t = classify(num_col, num_row, new_threshold)
+    avg1_list.append(calculate_average(below_t))
+    avg2_list.append(calculate_average(above_t))
+    if abs(avg1_list[-2] - avg1_list[-1]) <= epsilon and abs(avg2_list[-2] - avg2_list[-1]) <= epsilon:
+        break
+    new_threshold = (avg1_list[-1] + avg2_list[-1]) / 2
+
+thresh = avg1_list[-1]
+
+# Apply threshold
+for y in range(im.shape[0]):
+  for x in range(im.shape[1]):
+    if (im[y,x] >= thresh): 
+      im[y,x] = 255
+    else:
+      im[y,x] = 0
+
+inimage.write(vargs['of'])

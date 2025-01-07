@@ -1,0 +1,20 @@
+vp0.fdir=.
+inst=
+version=2
+sid=
+vp0.wn.window=1500
+vp0.gc.zoom=4.0
+uid=Standalone
+comments=Tue Oct 19 13:43:03 EDT 2010
+numvp=1
+vp0.sname=
+vp0.gc.frame=52
+bname=Boundary
+vp0.fileid=ctimage.vs
+vp0.gc.focus=374.0,263.0,52
+vp0.gc.center=374.0,263.0
+vp0.wn.level=-650
+boundary=0
+vp0.gc.mode=0
+bdate=Tue Oct 19 13:43:03 2010
+

@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+
+"""
+vgrow: another region growing algorithm
+"""
+
+import numpy as np
+from v4 import vx
+
+of=' '
+vxif=' '
+vargs = vx.vaparse( "if= of= r= -p  - ")
+if '-' in vargs:
+   print ("vgrow: Another region growing algorithm")
+   print ("if= input file")
+   print ("of= output file")
+   print ("r= range")
+   print ("[-p] labelling scheme")
+   exit(0)
+
+# check arguments 
+optp = '-p' in vargs
+if 'if' in vargs:
+   inimage = vx.Vx(vargs['if'])
+else:
+   print ( 'vgrow  error: if= must be specified')
+   exit()
+im = inimage.i
+if im.dtype != 'uint8' :
+    print ('vgrow error: image not byte type', file=sys.stderr)
+    exit(1)
+# check for output file name
+if 'of' not in vargs:
+   print ( 'vgrow error: of= must be specified')
+   exit()
+
+# assign range value
+if 'r' in vargs:
+   r = int(vargs['r'])
+else:
+   print ( 'vgrow  error: r = must be specified')
+   exit()
+
+# write a helper function to find neighbors
+def find_neighbor(y, x, num_col, num_row):
+    neighbor = []
+    check_list = {(y-1, x), (y+1, x), (y, x-1), (y, x+1)}
+    for element in check_list:
+        if element[0] >= 0 and element[0] < num_col and element[1] >=0 and element[1] < num_row:
+            neighbor.append(element)
+    return neighbor
+
+def setlabel (y, x, num_col, num_row, current_label):
+    global im, tm
+    if (y,x) not in labelled and tm[y,x] != 0:
+        connected = False
+        if tm[y,x] >= current_label and tm[y,x] - current_label <= r:
+            connected = True
+        elif current_label > tm[y,x] and current_label - tm[y,x] <= r:
+            connected = True
+        if connected == True:
+            im[y,x] = current_label
+            labelled.append((y,x))
+            next_set = find_neighbor(y, x, num_col, num_row)
+            for element in next_set:
+                setlabel(element[0], element[1], num_col, num_row, current_label)
+
+# copy the original image
+tmimage = vx.Vx( inimage ) 
+tm = tmimage.i
+
+
+labelled = []
+num_col = im.shape[0]
+num_row = im.shape[1]
+current_label = 1
+
+if optp:
+    for y in range(num_col):
+        for x in range(num_row):
+            if tm[y,x] == 0:
+                continue
+            elif (y,x) not in labelled:
+                current_label = tm[y,x]
+                setlabel(y, x, num_col, num_row, current_label)
+else:
+    for y in range(num_col):
+        for x in range(num_row):
+            if tm[y,x] == 0:
+                continue
+            elif (y,x) not in labelled:
+                setlabel(y, x, num_col, num_row, current_label)
+                if tm[y,x] != 0:
+                    current_label += 1
+    
+
+inimage.write(vargs['of'])

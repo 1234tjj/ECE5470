@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+""" v3dmeanpy: 3x3x3  mean filter for 3D images
+
+"""
+from v4 import vx
+import sys
+
+def v3dmean ( img ) :
+ """ compute 3x3x3 mean for vx.Vx struct
+ """
+ im = img.i
+ tmimage = vx.Vx( img ) 
+ tmimage.embedim((1,1,1,1,1,1))
+ tm = tmimage.i
+ for z in range(im.shape[0]):
+    for y in range(im.shape[1]):
+        for x in range(im.shape[1]):
+            sum = 0;
+            for zz in (0, 1, 2):
+                for yy in (0, 1, 2):
+                   for xx in (0, 1, 2):
+                      sum += tm[z + zz][y + yy][x+xx] 
+            im[z,y,x] = sum/27
+
+vargs = vx.vaparse( "if= of= -v  - ")
+if '-' in vargs:
+   print ("v3dmenapy 3D mean python example program")
+   print ("if= input file")
+   print ("of= output file")
+   print ("[-v] verbose mode")
+   sys.exit(0)
+
+for arg in ['if', 'of']:
+   if arg not in vargs:
+       print ('v3dmenapy error: required parameter %s is missing' % arg)
+       sys.exit(1)
+optv = '-v' in vargs
+
+ximage = vx.Vx( vargs['if'] )   ;#read image
+v3dmean(ximage)                 ;#process image
+if optv:
+   print (ximage.i)             ;# for very small images
+ximage.write(vargs['of'])       ;# Write the result file

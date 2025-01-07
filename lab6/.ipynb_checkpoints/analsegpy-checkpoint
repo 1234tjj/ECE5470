@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+
+import os
+#  Compare the manual segmentation with the reference segemenation nodeg.vx
+#  Record some quantitative measures in compare.txt
+os.system ("vrdiff if=ctimage.2.bb bf=nodseg.vx -cp of=compare.vx ig=ctimage.vs os=compare.txt")
+
+#  Create a montage visualization of the comparison of the segmentations
+os.system ("vclip f=10,29 compare.vx | vtile n=5,4 | vccvt -i  of=dcompare.vx")
+
+#  Create a binary image from the boundary file 
+os.system ("varend ctimage.2.bb -b -f | v3pad x=1 y=1 z=1 |vdim -c  of=mregion.vx ")
+
+## Create light shaded visualizations of polygon surface representations
+os.system ("v3pol -t mregion.vx | v3pfilt of=mregion.vd")
+os.system ("v3view mregion.vd of=dmregion.vx")
+os.system ("v3pol -t nodseg.vx | v3pfilt of=nodseg.vd")
+os.system ("v3view nodseg.vd of=dnodseg.vx")

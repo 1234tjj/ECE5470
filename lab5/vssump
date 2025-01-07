@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+""" vssump Compute local 1x1x1 mean using the buffer method """
+from v4 import vx
+from vxbuffer import *
+import sys
+
+vargs = vx.vaparse( "if= of= n= -v  - ")
+
+
+if '-' in vargs:
+   print ("vssump 1x1xn local temporal mean filter")
+   print ("if= input file")
+   print ("of= output file")
+   print ("n= number of frames")
+   print ("[-v] verbose mode for very small images")
+   sys.exit(0)
+
+for arg in ['if', 'of', 'n']:
+   if arg not in vargs:
+       print ('vssump error: required parameter %s is missing' % arg)
+       sys.exit(1)
+
+optv = '-v' in vargs
+nn = int(vargs['n'])
+
+invx = vxIbuf(vargs['if'], nn);
+outvx = vxObuf(vargs['of'] ); 
+im = invx.i
+imr = empty( im[0].shape, dtype=im.dtype);
+while invx.read():
+    im = invx.i
+    
+    for y in range(im.shape[1] ):
+        for x in range(im.shape[2]):
+             sum = 0
+             for t in range (nn):
+                  sum += im[t][y][x]
+             imr[y][x] = sum / nn
+    if optv:
+       print (imr)						   
+    outvx.add(imr)
+
+outvx.close()

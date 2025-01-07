@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+""" vssump Compute local 1x1x1 mean using the buffer method """
+from v4 import vx
+from vxbuffer import *
+import sys
+
+vargs = vx.vaparse( "if= of= th= -v  - ")
+
+
+if '-' in vargs:
+   print ("vsdif 1x1xn local change detection")
+   print ("if= input file")
+   print ("of= output file")
+   print ("th= threshold value")
+   print ("[-v] verbose mode for very small images")
+   sys.exit(0)
+
+for arg in ['if', 'of', 'th']:
+   if arg not in vargs:
+       print ('vsdif error: required parameter %s is missing' % arg)
+       sys.exit(1)
+
+optv = '-v' in vargs
+th = int(vargs['th'])
+
+invx = vxIbuf(vargs['if'], 2);
+outvx = vxObuf(vargs['of'] ); 
+im = invx.i
+imr = empty( im[0].shape, dtype=im.dtype);
+while invx.read():
+    im = invx.i
+    
+    for y in range(im.shape[1] ):
+        for x in range(im.shape[2]):
+             if (abs(im[0][y][x] - im[1][y][x]) > th):
+                 imr[y][x] = 255
+             else:
+                 imr[y][x] = 0
+
+    if optv:
+       print (imr)						   
+    outvx.add(imr)
+
+outvx.close()

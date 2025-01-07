@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+
+"""
+vcorner.py:  copy (crop) the lower left corner of a byte image
+
+This demonstration program reads a single byte image and
+returns a cropped part of it selected from the lower left corner.
+The size of the returned image may be dspecified on the command line.
+The default size is 10 x 10 pixels
+"""
+
+import numpy as np
+from v4 import vx
+
+# parse command parameters
+vargs = vx.vaparse("if= of= s=  -")
+
+if '-' in vargs:
+   print ("vcorner: copy lower left corner")
+   print ("if= input file")
+   print ("of= output file")
+   print ("s= size of result (default 10)")
+   exit()
+
+# read input image
+if 'if' in vargs:
+   inimage = vx.Vx(vargs['if'])
+else:
+   print ( 'vcorner  error: if= must be specified')
+   exit()
+im = inimage.i
+if im.dtype != 'uint8' :
+    print ("vcorner error: image not byte type", file=sys.stderr)
+    exit(1)
+
+# check for output file name
+if 'of' not in vargs:
+   print ( 'vpcrop error: of= must be specified')
+   exit()
+
+# set output image size
+if 's' in vargs:
+   s = int(vargs['s'])
+else:
+   s = 10
+
+# create output image with the size of the selected region
+tmimage = vx.Vx() 
+tm=np.zeros((s,s), dtype='uint8')
+tmimage.i = tm
+
+# Compute offset to get lower corner
+yoffset = np.shape(im)[0] - np.shape(tm)[0]
+
+for y in range(tm.shape[0]):
+    for x in range(tm.shape[1]):
+        tm[y][x] = im[y+yoffset][x] 
+
+# Write the output files
+tmimage.write(vargs['of'])
