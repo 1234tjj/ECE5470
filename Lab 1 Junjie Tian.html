@@ -2878,8 +2878,9 @@ input::placeholder {
   line-height: 14px;
   padding: 0 25px 0 10px;
   text-align: left;
-  -moz-appearance: none;
-  -webkit-appearance: none;
+  -moz-appearance: none;    /* 针对 Mozilla 浏览器 */
+  -webkit-appearance: none; /* 针对 WebKit 浏览器 */
+  appearance: none;         /* 标准属性 */
 }
 
 .jp-HTMLSelect.jp-DefaultStyle select:disabled {
@@ -7236,7 +7237,8 @@ all of MD as it is not optimized for dense, information rich UIs.
 <style type="text/css">
 /* Force rendering true colors when outputing to pdf */
 * {
-  -webkit-print-color-adjust: exact;
+  -webkit-print-color-adjust: exact; /* 针对 WebKit 浏览器 */
+  print-color-adjust: exact;        /* 标准属性 */
 }
 
 /* Misc */
